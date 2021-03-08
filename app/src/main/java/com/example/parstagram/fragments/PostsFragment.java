@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,7 +29,10 @@ import java.util.List;
  */
 public class PostsFragment extends Fragment {
 
+    private SwipeRefreshLayout swipeContainer;
+
     public static final String TAG = "PostsFragment";
+
     private RecyclerView rvPosts;
 
     protected PostsAdapter adapter;
@@ -46,6 +50,8 @@ public class PostsFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_posts, container, false);
     }
 
+
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -54,6 +60,18 @@ public class PostsFragment extends Fragment {
         adapter = new PostsAdapter(getContext(), allPosts);
         rvPosts.setAdapter(adapter);
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
+        swipeContainer = view.findViewById(R.id.pullToRefresh);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                queryPosts();
+            }
+        });
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
+
         queryPosts();
 
     }
@@ -74,8 +92,9 @@ public class PostsFragment extends Fragment {
                 for(Post post: posts){
                     Log.i(TAG, "Post: " + post.getDescription() + ", username " + post.getUser().getUsername());
                 }
-                allPosts.addAll(posts);
-                adapter.notifyDataSetChanged();
+                adapter.clear();
+                adapter.addAll(posts);
+                swipeContainer.setRefreshing(false);
             }
         });
     }
